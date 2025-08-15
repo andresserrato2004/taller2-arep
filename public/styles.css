@@ -1,0 +1,9 @@
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:2rem;line-height:1.5}
+header{display:flex;gap:1rem;align-items:center;margin-bottom:2rem}
+h1{margin:0}
+section{margin-bottom:2rem}
+label{display:block;margin-bottom:.25rem}
+input{padding:.5rem;margin-right:.5rem}
+button{padding:.5rem .75rem;cursor:pointer}
+.panel{margin-top:.5rem;padding:.75rem;border:1px solid #ddd;border-radius:.5rem;background:#fafafa}

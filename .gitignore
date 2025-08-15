@@ -1,0 +1,42 @@
+# Maven
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/
+
+# IDEs & editors
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Java
+*.class
+hs_err_pid*
+replay_pid*
+
+# OneDrive temp
+~$*
+# Maven
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDEs
+/.idea/
+*.iml
+.project
+.classpath
+.settings/
+
+nbactions.xml
+# OS
+.DS_Store
+Thumbs.db
