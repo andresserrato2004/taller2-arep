@@ -3,45 +3,66 @@
 Servidor HTTP que atiende múltiples solicitudes secuenciales (no concurrentes), sirve archivos estáticos (HTML, CSS, JS, imágenes) y expone endpoints REST consumidos de forma asíncrona desde el cliente.
 
 ## Requisitos
-- Java 8+ (probado en Windows)
-- Maven (opcional, ya incluido `pom.xml`)
+- Git
+- Java 21 (probado en Windows)
+- Maven 3.9.x (opcional, ya hay `pom.xml`)
+
+## Clonar el proyecto
+```powershell
+git clone https://github.com/andresserrato2004/taller1-arep.git
+cd taller1-arep
+```
 
 ## Estructura
 - `src/main/java/com/taller/HttpServer.java`: servidor HTTP.
-- `public/`: archivos estáticos (`index.html`, `app.js`, `styles.css`, `img/`).
+- `public/`: estáticos (`index.html`, `app.js`, `styles.css`, `img/`).
 
 ## Cómo ejecutar
-Con Maven:
 
+Con Maven (recomendado):
 ```powershell
-mvn -DskipTests package; java -cp target/classes com.taller.HttpServer
+mvn -DskipTests package
+java -cp target/classes com.taller.HttpServer
+```
+Con Maven (recomendado en una sola linea en Powershell):
+```powershell
+mvn -DskipTests package;java -cp target/classes com.taller.HttpServer
 ```
 
-Con `javac` directamente:
-
+Sin Maven (javac directo):
 ```powershell
 mkdir -Force target\classes | Out-Null
 javac -encoding UTF-8 -d target\classes src\main\java\com\taller\HttpServer.java
 java -cp target\classes com.taller.HttpServer
 ```
 
-Abrir en el navegador: http://localhost:35000/
-
-
-Para detener el servidor: `Ctrl + C` en la terminal.
+Abrir en el navegador: http://localhost:35000/  
+Para detener el servidor: Ctrl + C en la terminal.
 
 ## Endpoints REST
 - GET `/hello?name=andres` → `Hola andres`
 - POST `/hellopost?name=juan` → `Hola juan`
 
+Prueba rápida con PowerShell:
+```powershell
+# GET
+Invoke-WebRequest "http://localhost:35000/hello?name=andres" | Select-Object -Expand Content
+# POST (query param)
+Invoke-WebRequest -Method POST "http://localhost:35000/hellopost?name=juan" | Select-Object -Expand Content
+```
+
 ## Pruebas/Validación
-- Navegar a `/` carga `index.html` (sirve HTML, CSS, JS, imagen).
-- Formularios invocan endpoints vía XHR/`fetch` (asíncrono).
-- Solicitar directamente `/styles.css`, `/app.js`, `/img/logo.jpg` valida archivos estáticos.
+- Visitar `/` carga `index.html` (sirve HTML, CSS, JS, imagen).
+- Formularios invocan endpoints vía `fetch` (asíncrono).
+- Solicitar `/styles.css`, `/app.js`, `/img/logo.png` valida archivos estáticos.
 - 404 y 403 probados (archivo inexistente y path traversal `../`).
 
 ## Arquitectura
-- Bucle principal con `ServerSocket.accept()` procesa conexiones secuencialmente.
+- Bucle principal con `ServerSocket.accept()` procesa conexiones secuencialmente (no concurrente).
 - Router minimalista: endpoints `/hello` (GET) y `/hellopost` (POST) + estáticos desde `public/`.
 - Detección de `Content-Type` por extensión y `Files.probeContentType`.
-- Protección contra path traversal validando que el recurso resuelto se mantenga dentro de `public/`.
+- Prevención de path traversal validando que el recurso resuelto permanezca dentro de `public/`.
+
+## Desarrollo
+- Formato, dependencias y compilación vía Maven.
+- `.gitignore` incluye Java/Maven/IDE/OneDrive para un
