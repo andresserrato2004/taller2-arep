@@ -51,6 +51,8 @@ Invoke-WebRequest "http://localhost:35000/hello?name=andres" | Select-Object -Ex
 Invoke-WebRequest -Method POST "http://localhost:35000/hellopost?name=juan" | Select-Object -Expand Content
 ```
 
+#### :v  si se van a copear no lo hagan tan descarado gracias =3  
+
 ## Pruebas/Validación
 - Visitar `/` carga `index.html` (sirve HTML, CSS, JS, imagen).
 - Formularios invocan endpoints vía `fetch` (asíncrono).
@@ -65,4 +67,4 @@ Invoke-WebRequest -Method POST "http://localhost:35000/hellopost?name=juan" | Se
 
 ## Desarrollo
 - Formato, dependencias y compilación vía Maven.
-- `.gitignore` incluye Java/Maven/IDE/OneDrive para un
+
