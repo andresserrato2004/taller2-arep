@@ -5,7 +5,7 @@ HTTP server that attends several queries sequential (not concurrent), get static
 ## Requirements 
 
 - Git
-- Java 21
+- Java 
 - Maven 3.9.x 
 
 ## Clone the project
@@ -14,17 +14,6 @@ git clone https://github.com/andresserrato2004/taller1-arep.git
 ```
 ```powershell
 cd taller1-arep
-```
-## If you don´t have java 21
-
-modify the version in the  file [pom.xml](pom.xml) change the java version for example java `21` to your java version`17` if your java version is 21  pls ignore this.
-
-```xml
-<properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>21</maven.compiler.source>
-    <maven.compiler.target>21</maven.compiler.target>
-  </properties>
 ```
 
 ## Scaffolding 
@@ -52,11 +41,11 @@ modify the version in the  file [pom.xml](pom.xml) change the java version for e
 mvn compile
 ```
 ```powershell
-java -cp target/classes com.taller.HttpServer
+mvn exec:java
 ```
 #### with Maven in only line on Powershell:
 ```powershell
-mvn -DskipTests package;java -cp target/classes com.taller.HttpServer
+mvn compile exec:java
 ```
 
 #### whiteout  Maven (javac):
