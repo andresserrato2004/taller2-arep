@@ -1,17 +1,23 @@
-# Servidor Web en Java (sin frameworks)
+# Web Server in java (whiteout frameworks)
 
+HTTP server that attends several queries sequential (not concurrent), get static files (HTTP, CSS, JS and images) and expose endpoints `REST` that can be consumed the form a asynchronous since the client  
 
-# Andres Serrato Camero
+## Requirements 
 
-Servidor HTTP que atiende múltiples solicitudes secuenciales (no concurrentes), sirve archivos estáticos (HTML, CSS, JS, imágenes) y expone endpoints REST consumidos de forma asíncrona desde el cliente.
-
-## Requisitos 
 - Git
 - Java 21
 - Maven 3.9.x 
 
-## en caso de no tener java 21
-modificar la version en el archivo [pom.xml](pom.xml) cambia el lugar en donde dice `21` por tu version de java por ejemplo java `17`
+## Clone the project
+```powershell
+git clone https://github.com/andresserrato2004/taller1-arep.git
+```
+```powershell
+cd taller1-arep
+```
+## If you don´t have java 21
+
+modify the version in the  file [pom.xml](pom.xml) change the java version for example java `21` to your java version`17` if your java version is 21  pls ignore this.
 
 ```xml
 <properties>
@@ -21,34 +27,39 @@ modificar la version en el archivo [pom.xml](pom.xml) cambia el lugar en donde d
   </properties>
 ```
 
-## Clonar el proyecto
-```powershell
-git clone https://github.com/andresserrato2004/taller1-arep.git
+## Scaffolding 
 ```
-```powershell
-cd taller1-arep
+├── src
+│   ├── main
+│   ├── java
+│   ├── com
+│   ├── taller
+│   └── HttpServer.java 
+├── public
+│   ├── index.html 
+│   ├── app.js 
+│   ├── styles.css 
+│   └── img/ 
+│ 
+└── pom.xml
 ```
-## Estructura
-- `src/main/java/com/taller/HttpServer.java`: servidor HTTP.
-- `public/`: estáticos (`index.html`, `app.js`, `styles.css`, `img/`).
+# hot to execute 
 
-# Cómo ejecutar
+- only choose one way to run.  
 
-- por favor solo escojer una de las formas para ejecutar.  
-
-#### Con Maven (recomendado):
+#### with Maven (recommended):
 ```powershell
-mvn -DskipTests 
+mvn compile
 ```
 ```powershell
 java -cp target/classes com.taller.HttpServer
 ```
-#### Con Maven en una sola linea en Powershell:
+#### with Maven in only line on Powershell:
 ```powershell
 mvn -DskipTests package;java -cp target/classes com.taller.HttpServer
 ```
 
-#### Sin Maven (javac directo):
+#### whiteout  Maven (javac):
 ```powershell
 mkdir -Force target\classes | Out-Null
 ```
@@ -59,35 +70,29 @@ javac -encoding UTF-8 -d target\classes src\main\java\com\taller\HttpServer.java
 java -cp target\classes com.taller.HttpServer
 ```
 
-Abrir en el navegador: http://localhost:35000/  
-Para detener el servidor: Ctrl + C en la terminal.
+open in the explorer: http://localhost:35000/  
+for kill server use : Ctrl + C on the terminal.
 
-## Endpoints REST
-- GET `/hello?name=andres` → `Hola andres`
-- POST `/hellopost?name=juan` → `Hola juan`
+## fast test with PowerShell:
 
-Prueba rápida con PowerShell:
 ```powershell
 # GET
 Invoke-WebRequest "http://localhost:35000/hello?name=andres" | Select-Object -Expand Content
 # POST (query param)
 Invoke-WebRequest -Method POST "http://localhost:35000/hellopost?name=juan" | Select-Object -Expand Content
 ```
+## Endpoints REST
+- GET `/hello?name=andres` → `Hola andres`
+- POST `/hellopost?name=juan` → `Hola juan`
 
-#### :v  si se van a copear no lo hagan tan descarado gracias =3  
 
-## Pruebas/Validación
-- Visitar `/` carga `index.html` (sirve HTML, CSS, JS, imagen).
-- Formularios invocan endpoints vía `fetch` (asíncrono).
-- Solicitar `/styles.css`, `/app.js`, `/img/logo.png` valida archivos estáticos.
-- 404 y 403 probados (archivo inexistente y path traversal `../`).
+## Test with maven
 
-## Arquitectura
-- Bucle principal con `ServerSocket.accept()` procesa conexiones secuencialmente (no concurrente).
-- Router minimalista: endpoints `/hello` (GET) y `/hellopost` (POST) + estáticos desde `public/`.
-- Detección de `Content-Type` por extensión y `Files.probeContentType`.
-- Prevención de path traversal validando que el recurso resuelto permanezca dentro de `public/`.
+to execute test with maven **you must be running the server** and on other terminal execute next command
 
-## Desarrollo
-- Formato, dependencias y compilación vía Maven.
+```powershell
+mvn test
+```
+## Author
+ - Andres Serrato Camero
 
