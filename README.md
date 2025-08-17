@@ -43,7 +43,7 @@ mvn compile
 ```powershell
 mvn exec:java
 ```
-#### with Maven in only line on Powershell:
+#### with Maven in only line on CMD :
 ```powershell
 mvn compile exec:java
 ```
@@ -62,7 +62,7 @@ java -cp target\classes com.taller.HttpServer
 open in the explorer: http://localhost:35000/  
 for kill server use : Ctrl + C on the terminal.
 
-## fast test with PowerShell:
+## fast test with CMD or powershell:
 
 ```powershell
 # GET
