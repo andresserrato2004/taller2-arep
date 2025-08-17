@@ -14,22 +14,23 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
+
+/* 
+ * this class is the most basic implementation of a httpserver or a web server
+ * handle queries, files,and 
+ * 
+ * before pls if u have 
+ */
 public class HttpServer {
 
     private static final int DEFAULT_PORT = 35000;
-    // Serve static files from existing 'public' folder in the project root
     private static final Path BASE_DIR = Paths.get("public").toAbsolutePath().normalize();
 
     public static void main(String[] args) throws IOException {
-        if (!Files.exists(BASE_DIR)) {
-            System.out.println("Static base directory does not exist: " + BASE_DIR);
-            System.out.println("Create the 'public' folder in your project root.");
-        }
 
         try (ServerSocket serverSocket = new ServerSocket(DEFAULT_PORT)) {
             System.out.println("Server listening on http://localhost:" + DEFAULT_PORT + "/");
 
-            // Sequential, non-concurrent loop
             while (true) {
                 try (Socket clientSocket = serverSocket.accept()) {
                     handleClient(clientSocket);
@@ -43,6 +44,10 @@ public class HttpServer {
         }
     }
 
+
+    /* 
+     * This method handle clientsocket and implements services REST POST and GET
+     */
     private static void handleClient(Socket clientSocket) throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
         OutputStream out = clientSocket.getOutputStream();
@@ -59,11 +64,10 @@ public class HttpServer {
         }
 
         String method = parts[0];
-        String rawPath = parts[1]; // may include query string
+        String rawPath = parts[1];
         String protocol = parts[2];
         System.out.println("method: " + method + ", path: " + rawPath + ", protocol: " + protocol);
 
-        // Read headers
         Map<String, String> headers = new HashMap<>();
         String line;
         while ((line = in.readLine()) != null && !line.isEmpty()) {
@@ -75,7 +79,6 @@ public class HttpServer {
             }
         }
 
-        // Read body (if present)
         int contentLength = 0;
         if (headers.containsKey("content-length")) {
             try {
@@ -93,7 +96,6 @@ public class HttpServer {
             requestBody = new String(buf);
         }
 
-        // Separate path and query
         String pathOnly = rawPath;
         int q = rawPath.indexOf('?');
         if (q >= 0) {
@@ -101,7 +103,6 @@ public class HttpServer {
         }
 
         try {
-            // REST endpoints
             if ("/hello".equals(pathOnly) && "GET".equalsIgnoreCase(method)) {
                 String name = getQueryParam(rawPath, "name");
                 String msg = "Hola " + (name != null ? name : "");
@@ -118,7 +119,6 @@ public class HttpServer {
                 return;
             }
 
-            // Static files
             if ("/".equals(pathOnly)) {
                 serveStatic(out, "index.html");
             } else {
@@ -135,9 +135,11 @@ public class HttpServer {
         }
     }
 
+    /* 
+     * This method handle HTTP request for static resources 
+     */
     private static void serveStatic(OutputStream out, String relativePath) throws IOException {
         Path target = BASE_DIR.resolve(relativePath).normalize();
-        // Prevent path traversal
         if (!target.startsWith(BASE_DIR)) {
             byte[] body = "<h1>403 Forbidden</h1>".getBytes(StandardCharsets.UTF_8);
             writeResponse(out, 403, "Forbidden", "text/html; charset=UTF-8", body);
@@ -155,6 +157,11 @@ public class HttpServer {
         writeResponse(out, 200, "OK", contentType, content);
     }
 
+
+    /* 
+     * this method writes the Response from the server web and update status code
+     * contentType 
+     */
     private static void writeResponse(OutputStream out, int statusCode, String statusText, String contentType, byte[] body) throws IOException {
         String headers
                 = "HTTP/1.1 " + statusCode + " " + statusText + "\r\n"
@@ -204,21 +211,19 @@ public class HttpServer {
         if (name.endsWith(".jpg") || name.endsWith(".jpeg")) {
             return "image/jpeg";
         }
-        if (name.endsWith(".gif")) {
-            return "image/gif";
-        }
-        if (name.endsWith(".svg")) {
-            return "image/svg+xml";
-        }
         if (name.endsWith(".ico")) {
             return "image/x-icon";
-        }
-        if (name.endsWith(".txt")) {
-            return "text/plain; charset=UTF-8";
         }
         return "application/octet-stream";
     }
 
+    /* 
+     * this method get query params from URL 
+     * 
+     * @param path path from URL
+     * @param key value before param requested
+     * @return value query from URL
+     */
     private static String getQueryParam(String path, String key) {
         int q = path.indexOf('?');
         if (q < 0) {
