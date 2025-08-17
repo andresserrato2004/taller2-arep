@@ -5,10 +5,10 @@
 
 Servidor HTTP que atiende múltiples solicitudes secuenciales (no concurrentes), sirve archivos estáticos (HTML, CSS, JS, imágenes) y expone endpoints REST consumidos de forma asíncrona desde el cliente.
 
-## Requisitos
+## Requisitos 
 - Git
-- Java 21 (probado en Windows)
-- Maven 3.9.x (opcional, ya hay `pom.xml`)
+- Java 21
+- Maven 3.9.x 
 
 ## en caso de no tener java 21
 modificar la version en el archivo [pom.xml](pom.xml) cambia el lugar en donde dice `21` por tu version de java por ejemplo java `17`

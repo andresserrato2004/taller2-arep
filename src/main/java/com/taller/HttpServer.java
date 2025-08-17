@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URLDecoder;
@@ -41,7 +42,7 @@ public class HttpServer {
         } catch (IOException e) {
             System.err.println("Could not listen on port: " + DEFAULT_PORT + ". " + e.getMessage());
             System.exit(1);
-        }
+        }   
     }
 
 
@@ -182,7 +183,7 @@ public class HttpServer {
     private static String urlDecodePath(String path) {
         try {
             return URLDecoder.decode(path, StandardCharsets.UTF_8.name());
-        } catch (Exception e) {
+        } catch (UnsupportedEncodingException e) {
             return path;
         }
     }
