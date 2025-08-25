@@ -11,26 +11,24 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
 
 /* 
- * this class is the most basic implementation of a httpserver or a web server
- * handle queries, files,and 
- * 
- * before pls if u have 
+ * This class is a web server that integrates with the WebFramework
+ * It handles HTTP requests using the Request, Response, and RouteHandler classes
+ * and supports both registered routes and static file serving
  */
 public class HttpServer {
 
-    private static final int DEFAULT_PORT = 35000;
-    private static final Path BASE_DIR = Paths.get("public").toAbsolutePath().normalize();
+    //private static final int DEFAULT_PORT = 35000;
+    // Remove BASE_DIR as we'll use WebFramework's static directory
 
-    public static void main(String[] args) throws IOException {
+    public static void start(int port) throws IOException {
 
-        try (ServerSocket serverSocket = new ServerSocket(DEFAULT_PORT)) {
-            System.out.println("Server listening on http://localhost:" + DEFAULT_PORT + "/");
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            System.out.println("Server listening on http://localhost:" + port + "/");
 
             while (true) {
                 try (Socket clientSocket = serverSocket.accept()) {
@@ -40,14 +38,15 @@ public class HttpServer {
                 }
             }
         } catch (IOException e) {
-            System.err.println("Could not listen on port: " + DEFAULT_PORT + ". " + e.getMessage());
+            System.err.println("Could not listen on port: " + port + ". " + e.getMessage());
             System.exit(1);
         }   
     }
 
 
     /* 
-     * This method handle clientsocket and implements services REST POST and GET
+     * This method handles client socket and integrates with the WebFramework
+     * It creates Request/Response objects and uses registered RouteHandlers
      */
     private static void handleClient(Socket clientSocket) throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
@@ -60,7 +59,9 @@ public class HttpServer {
 
         String[] parts = requestLine.split(" ");
         if (parts.length < 3) {
-            writeResponse(out, 400, "Bad Request", "text/plain; charset=UTF-8", "Bad Request".getBytes(StandardCharsets.UTF_8));
+            Response response = new Response().status(400);
+            response.setStatusText("Bad Request");
+            writeResponse(out, response, "Bad Request".getBytes(StandardCharsets.UTF_8));
             return;
         }
 
@@ -87,6 +88,7 @@ public class HttpServer {
             } catch (NumberFormatException ignored) {
             }
         }
+        
         String requestBody = null;
         if (contentLength > 0 && ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method))) {
             char[] buf = new char[contentLength];
@@ -97,33 +99,31 @@ public class HttpServer {
             requestBody = new String(buf);
         }
 
-        String pathOnly = rawPath;
-        int q = rawPath.indexOf('?');
-        if (q >= 0) {
-            pathOnly = rawPath.substring(0, q);
+        // Handle form-encoded POST parameters
+        if ("POST".equalsIgnoreCase(method) && requestBody != null && isFormUrlEncoded(headers)) {
+            rawPath = rawPath + (rawPath.contains("?") ? "&" : "?") + requestBody;
         }
 
+        // Create Request object
+        Request request = new Request(method, rawPath, headers, requestBody);
+        Response response = new Response();
+
         try {
-            if ("/hello".equals(pathOnly) && "GET".equalsIgnoreCase(method)) {
-                String name = getQueryParam(rawPath, "name");
-                String msg = "Hola " + (name != null ? name : "");
-                writeResponse(out, 200, "OK", "text/plain; charset=UTF-8", msg.getBytes(StandardCharsets.UTF_8));
-                return;
-            }
-            if ("/hellopost".equals(pathOnly) && "POST".equalsIgnoreCase(method)) {
-                String name = getQueryParam(rawPath, "name");
-                if (name == null && requestBody != null && isFormUrlEncoded(headers)) {
-                    name = getQueryParam("?" + requestBody, "name");
-                }
-                String msg = "Hola " + (name != null ? name : "");
-                writeResponse(out, 200, "OK", "text/plain; charset=UTF-8", msg.getBytes(StandardCharsets.UTF_8));
+            // Check if there's a registered route for this path and method
+            RouteHandler handler = WebFramework.getRoute(method, request.getPath());
+            
+            if (handler != null) {
+                // Execute the route handler
+                String responseBody = handler.handle(request, response);
+                writeResponse(out, response, responseBody.getBytes(StandardCharsets.UTF_8));
                 return;
             }
 
-            if ("/".equals(pathOnly)) {
+            // Handle static files if no route is found
+            if ("/".equals(request.getPath())) {
                 serveStatic(out, "index.html");
             } else {
-                String decoded = urlDecodePath(pathOnly);
+                String decoded = urlDecodePath(request.getPath());
                 if (decoded.startsWith("/")) {
                     decoded = decoded.substring(1);
                 }
@@ -131,46 +131,62 @@ public class HttpServer {
             }
         } catch (IOException ioe) {
             System.err.println("IO error: " + ioe.getMessage());
+            Response errorResponse = new Response().status(500).type("text/html; charset=UTF-8");
+            errorResponse.setStatusText("Internal Server Error");
             byte[] body = "<h1>500 Internal Server Error</h1>".getBytes(StandardCharsets.UTF_8);
-            writeResponse(out, 500, "Internal Server Error", "text/html; charset=UTF-8", body);
+            writeResponse(out, errorResponse, body);
         }
     }
 
     /* 
-     * This method handle HTTP request for static resources 
+     * This method handles HTTP requests for static resources using WebFramework's static directory
      */
     private static void serveStatic(OutputStream out, String relativePath) throws IOException {
-        Path target = BASE_DIR.resolve(relativePath).normalize();
-        if (!target.startsWith(BASE_DIR)) {
+        Path baseDir = WebFramework.getStaticBaseDir();
+        Path target = baseDir.resolve(relativePath).normalize();
+        
+        if (!target.startsWith(baseDir)) {
+            Response response = new Response().status(403).type("text/html; charset=UTF-8");
+            response.setStatusText("Forbidden");
             byte[] body = "<h1>403 Forbidden</h1>".getBytes(StandardCharsets.UTF_8);
-            writeResponse(out, 403, "Forbidden", "text/html; charset=UTF-8", body);
+            writeResponse(out, response, body);
             return;
         }
 
         if (!Files.exists(target) || Files.isDirectory(target)) {
+            Response response = new Response().status(404).type("text/html; charset=UTF-8");
+            response.setStatusText("Not Found");
             byte[] body = "<h1>404 Not Found</h1>".getBytes(StandardCharsets.UTF_8);
-            writeResponse(out, 404, "Not Found", "text/html; charset=UTF-8", body);
+            writeResponse(out, response, body);
             return;
         }
 
         byte[] content = Files.readAllBytes(target);
         String contentType = detectContentType(target);
-        writeResponse(out, 200, "OK", contentType, content);
+        Response response = new Response().status(200).type(contentType);
+        response.setStatusText("OK");
+        writeResponse(out, response, content);
     }
 
 
     /* 
-     * this method writes the Response from the server web and update status code
-     * contentType 
+     * This method writes the HTTP response using the Response object
      */
-    private static void writeResponse(OutputStream out, int statusCode, String statusText, String contentType, byte[] body) throws IOException {
-        String headers
-                = "HTTP/1.1 " + statusCode + " " + statusText + "\r\n"
-                + "Content-Type: " + contentType + "\r\n"
-                + "Content-Length: " + body.length + "\r\n"
-                + "Connection: close\r\n"
-                + "\r\n";
-        out.write(headers.getBytes(StandardCharsets.UTF_8));
+    private static void writeResponse(OutputStream out, Response response, byte[] body) throws IOException {
+        StringBuilder headers = new StringBuilder();
+        headers.append("HTTP/1.1 ").append(response.getStatusCode()).append(" ").append(response.getStatusText()).append("\r\n");
+        headers.append("Content-Type: ").append(response.getContentType()).append("\r\n");
+        headers.append("Content-Length: ").append(body.length).append("\r\n");
+        
+        // Add custom headers
+        for (Map.Entry<String, String> header : response.getHeaders().entrySet()) {
+            headers.append(header.getKey()).append(": ").append(header.getValue()).append("\r\n");
+        }
+        
+        headers.append("Connection: close\r\n");
+        headers.append("\r\n");
+        
+        out.write(headers.toString().getBytes(StandardCharsets.UTF_8));
         out.write(body);
         out.flush();
     }
@@ -216,27 +232,5 @@ public class HttpServer {
             return "image/x-icon";
         }
         return "application/octet-stream";
-    }
-
-    /* 
-     * this method get query params from URL 
-     * 
-     * @param path path from URL
-     * @param key value before param requested
-     * @return value query from URL
-     */
-    private static String getQueryParam(String path, String key) {
-        int q = path.indexOf('?');
-        if (q < 0) {
-            return null;
-        }
-        String qs = path.substring(q + 1);
-        for (String pair : qs.split("&")) {
-            String[] kv = pair.split("=", 2);
-            if (kv.length == 2 && kv[0].equals(key)) {
-                return java.net.URLDecoder.decode(kv[1], java.nio.charset.StandardCharsets.UTF_8);
-            }
-        }
-        return null;
     }
 }
