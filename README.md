@@ -118,7 +118,7 @@ mvn compile
 mvn exec:java
 ```
 
-#### Run tests:
+#### Run tests open new terminal and  run aplication: 
 ```bash
 mvn test
 ```
